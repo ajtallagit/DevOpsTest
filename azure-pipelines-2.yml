@@ -19,8 +19,70 @@ stages:
 
       vmImage: 'windows-latest'
 
-  steps:      
+    steps:
+    - task: DotNetCoreCLI@2 
 
+      displayName: 'Restore Packages' 
+
+      inputs: 
+
+        command: restore 
+
+        projects: '**/*.sln' 
+
+    - task: DotNetCoreCLI@2 
+
+      displayName: 'Build WebApp' 
+
+      inputs: 
+
+        command: build 
+
+        projects: '**/*.sln' 
+
+        arguments: '--configuration Debug' 
+
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+        
+    - task: DotNetCoreCLI@2 
+
+      displayName: 'Create Package' 
+
+      inputs: 
+
+        command: publish 
+
+        projects: '**/*.sln' 
+
+        arguments: '--configuration Debug --output $(Build.ArtifactStagingDirectory)' 
+
+        zipAfterPublish: true 
+
+        publishWebProjects: true
+
+
+    - task: PublishBuildArtifacts@1 
+
+      displayName: 'Publish Package' 
+
+      inputs: 
+
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+
+        ArtifactName: 'TailSpin'
+
+    - task: DotNetCoreCLI@2 
+
+      displayName: 'Test Package' 
+
+      inputs: 
+
+        command: test 
+
+        projects: '**/*.sln' 
+
+        arguments: '--configuration Debug'    
 - stage: DeployDEV 
   displayName: 'Deploy Development'  
 
@@ -72,72 +134,3 @@ stages:
                 Write-Host "Deploy in QA"            
 
 
-variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-
-steps:
-- task: DotNetCoreCLI@2 
-
-  displayName: 'Restore Packages' 
-
-  inputs: 
-
-    command: restore 
-
-    projects: '**/*.sln' 
-
-- task: DotNetCoreCLI@2 
-
-  displayName: 'Build WebApp' 
-
-  inputs: 
-
-    command: build 
-
-    projects: '**/*.sln' 
-
-    arguments: '--configuration Debug' 
-
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-
-    
-- task: DotNetCoreCLI@2 
-
-  displayName: 'Create Package' 
-
-  inputs: 
-
-    command: publish 
-
-    projects: '**/*.sln' 
-
-    arguments: '--configuration Debug --output $(Build.ArtifactStagingDirectory)' 
-
-    zipAfterPublish: true 
-
-    publishWebProjects: true
-
-
-- task: PublishBuildArtifacts@1 
-
-  displayName: 'Publish Package' 
-
-  inputs: 
-
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-
-    ArtifactName: 'TailSpin'
-
-- task: DotNetCoreCLI@2 
-
-  displayName: 'Test Package' 
-
-  inputs: 
-
-    command: test 
-
-    projects: '**/*.sln' 
-
-    arguments: '--configuration Debug'    
